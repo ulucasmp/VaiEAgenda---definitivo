@@ -1,0 +1,13 @@
+
+{
+  "rewrites": [
+    {
+      "source": "/agendamento/:slug",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
