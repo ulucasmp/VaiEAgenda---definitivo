@@ -5,18 +5,17 @@ import { useBloqueios } from './useBloqueios';
 
 interface Appointment {
   id: string;
-  cliente_nome: string;
-  cliente_telefone: string;
-  cliente_email: string | null;
-  data_agendamento: string;
-  horario: string;
+  client_name: string;
+  client_phone: string;
+  client_email: string | null;
+  scheduled_at: string;
   status: string;
-  servico: {
-    nome: string;
-    preco: number;
+  service: {
+    name: string;
+    price: number;
   } | null;
-  profissional: {
-    nome: string;
+  professional: {
+    name: string;
   } | null;
 }
 
@@ -31,33 +30,31 @@ export const useAppointments = (empresaId?: string) => {
 
     try {
       let query = supabase
-        .from('agendamentos')
+        .from('appointments')
         .select(`
           id,
-          cliente_nome,
-          cliente_telefone,
-          cliente_email,
-          data_agendamento,
-          horario,
+          client_name,
+          client_phone,
+          client_email,
+          scheduled_at,
           status,
-          servicos:servico_id (nome, preco),
-          profissionais:profissional_id (nome)
+          services:service_id (name, price),
+          professionals:professional_id (name)
         `)
-        .order('data_agendamento', { ascending: true })
-        .order('horario', { ascending: true });
+        .order('scheduled_at', { ascending: true });
 
       if (empresaId) {
-        query = query.eq('empresa_id', empresaId);
+        query = query.eq('company_id', empresaId);
       } else if (user) {
         // Buscar agendamentos da empresa do usuário logado
         const { data: empresaData } = await supabase
-          .from('empresas')
+          .from('companies')
           .select('id')
-          .eq('owner_id', user.id)
+          .eq('id', user.id)
           .single();
 
         if (empresaData) {
-          query = query.eq('empresa_id', empresaData.id);
+          query = query.eq('company_id', empresaData.id);
         }
       }
 
@@ -70,8 +67,8 @@ export const useAppointments = (empresaId?: string) => {
 
       setAppointments(data?.map(appointment => ({
         ...appointment,
-        servico: appointment.servicos,
-        profissional: appointment.profissionais
+        service: appointment.services,
+        professional: appointment.professionals
       })) || []);
     } catch (error) {
       console.error('Erro ao buscar agendamentos:', error);
@@ -88,7 +85,7 @@ export const useAppointments = (empresaId?: string) => {
   const getAppointmentsByDate = (date: Date): Appointment[] => {
     const dateString = date.toISOString().split('T')[0];
     return appointments.filter(
-      appointment => appointment.data_agendamento === dateString
+      appointment => appointment.scheduled_at.split('T')[0] === dateString
     );
   };
 
@@ -101,10 +98,10 @@ export const useAppointments = (empresaId?: string) => {
   const isTimeBooked = (date: Date, time: string, professionalId?: string): boolean => {
     const dateString = date.toISOString().split('T')[0];
     return appointments.some(appointment => 
-      appointment.data_agendamento === dateString &&
-      appointment.horario === time + ':00' &&
-      appointment.status === 'confirmado' &&
-      (!professionalId || appointment.profissional?.nome === professionalId)
+      appointment.scheduled_at.split('T')[0] === dateString &&
+      appointment.scheduled_at.includes(time) &&
+      appointment.status === 'confirmed' &&
+      (!professionalId || appointment.professional?.name === professionalId)
     );
   };
 

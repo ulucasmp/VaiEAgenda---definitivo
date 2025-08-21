@@ -61,10 +61,10 @@ const Dashboard = () => {
 
   // Calculate today's stats from real appointments
   const today = new Date().toISOString().split('T')[0];
-  const todayAppointments = appointments.filter(apt => apt.data_agendamento === today);
+  const todayAppointments = appointments.filter(apt => apt.scheduled_at.split('T')[0] === today);
   const todayStats = {
     agendamentos: todayAppointments.length,
-    receita: todayAppointments.reduce((total, apt) => total + (apt.servico?.preco || 0), 0),
+    receita: todayAppointments.reduce((total, apt) => total + (apt.service?.price || 0), 0),
     disponivel: Math.max(0, 12 - todayAppointments.length), // Assuming 12 slots per day
     cancelados: todayAppointments.filter(apt => apt.status === 'cancelado').length
   };
@@ -73,8 +73,9 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
         <DashboardHeader companyName={empresa.nome_negocio} />
+        <DashboardHeader companyName={empresa.name} />
         
-        <BookingLinkCard companyName={empresa.nome_negocio} />
+        <BookingLinkCard companyName={empresa.name} />
 
         <StatsCards todayStats={todayStats} />
         
@@ -119,33 +120,33 @@ const Dashboard = () => {
 
           <OverviewTab 
             companyData={{
-              name: empresa.nome_negocio,
-              type: empresa.tipo,
-              phone: empresa.telefone || '',
-              address: empresa.endereco || ''
+              name: empresa.name,
+              type: 'business',
+              phone: empresa.phone || '',
+              address: empresa.address || ''
             }}
             professionals={profissionais.map(prof => ({
               id: prof.id,
-              name: prof.nome,
-              specialty: prof.especialidade,
-              active: prof.ativo
+              name: prof.name,
+              specialty: 'Professional',
+              active: true
             }))}
             services={servicos.map(servico => ({
               id: servico.id,
-              name: servico.nome,
-              price: Number(servico.preco),
-              duration: servico.duracao_em_minutos,
-              active: servico.ativo
+              name: servico.name,
+              price: Number(servico.price),
+              duration: servico.duration_minutes,
+              active: true
             }))}
             appointments={appointments.map(apt => ({
               id: apt.id,
-              clientName: apt.cliente_nome,
-              service: apt.servico?.nome || 'Serviço não especificado',
-              professional: apt.profissional?.nome || 'Profissional não especificado',
-              date: apt.data_agendamento,
-              time: apt.horario.substring(0, 5), // Remove seconds from time
-              status: apt.status === 'agendado - pendente de confirmação' ? 'pending' : 
-                     apt.status === 'confirmado' ? 'confirmed' : 'cancelled'
+              clientName: apt.client_name,
+              service: apt.service?.name || 'Serviço não especificado',
+              professional: apt.professional?.name || 'Profissional não especificado',
+              date: apt.scheduled_at.split('T')[0],
+              time: new Date(apt.scheduled_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+              status: apt.status === 'scheduled' ? 'pending' : 
+                     apt.status === 'confirmed' ? 'confirmed' : 'cancelled'
             }))}
           />
 
@@ -157,11 +158,11 @@ const Dashboard = () => {
           
           <ProfessionalsTab professionals={profissionais.map(prof => ({
             id: prof.id,
-            name: prof.nome,
-            specialty: prof.especialidade,
+            name: prof.name,
+            specialty: 'Professional',
             phone: '',
             email: '',
-            active: prof.ativo
+            active: true
           }))} />
         </Tabs>
       </div>

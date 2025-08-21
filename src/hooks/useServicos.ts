@@ -5,11 +5,10 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface Servico {
   id: string;
-  empresa_id: string;
-  nome: string;
-  preco: number;
-  duracao_em_minutos: number;
-  ativo: boolean;
+  company_id: string;
+  name: string;
+  price: number;
+  duration_minutes: number;
   created_at: string;
 }
 
@@ -26,9 +25,9 @@ export const useServicos = (empresaId?: string) => {
 
     try {
       const { data, error } = await supabase
-        .from('servicos')
+        .from('services')
         .select('*')
-        .eq('empresa_id', empresaId)
+        .eq('company_id', empresaId)
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -45,7 +44,7 @@ export const useServicos = (empresaId?: string) => {
 
   const addServico = async (servicoData: Omit<Servico, 'id' | 'created_at'>) => {
     const { data, error } = await supabase
-      .from('servicos')
+      .from('services')
       .insert([servicoData])
       .select()
       .single();
@@ -60,7 +59,7 @@ export const useServicos = (empresaId?: string) => {
 
   const updateServico = async (id: string, updates: Partial<Servico>) => {
     const { data, error } = await supabase
-      .from('servicos')
+      .from('services')
       .update(updates)
       .eq('id', id)
       .select()
@@ -78,7 +77,7 @@ export const useServicos = (empresaId?: string) => {
 
   const deleteServico = async (id: string) => {
     const { error } = await supabase
-      .from('servicos')
+      .from('services')
       .delete()
       .eq('id', id);
 

@@ -39,11 +39,8 @@ const DashboardNew = () => {
 
     const formData = new FormData(e.currentTarget);
     const profissionalData = {
-      empresa_id: empresa.id,
-      nome: formData.get('nome') as string,
-      especialidade: formData.get('especialidade') as string,
-      horarios_disponiveis: null,
-      ativo: true,
+      company_id: empresa.id,
+      name: formData.get('nome') as string,
     };
 
     const { error } = await addProfissional(profissionalData);
@@ -71,8 +68,7 @@ const DashboardNew = () => {
 
     const formData = new FormData(e.currentTarget);
     const updates = {
-      nome: formData.get('nome') as string,
-      especialidade: formData.get('especialidade') as string,
+      name: formData.get('nome') as string,
     };
 
     const { error } = await updateProfissional(editingProfissional.id, updates);
@@ -132,9 +128,8 @@ const DashboardNew = () => {
               <Logo size="sm" variant="full" />
               <div className="hidden md:block">
                 <h1 className="text-xl font-semibold text-gray-900">
-                  {empresa?.nome_negocio}
+                  {empresa?.name}
                 </h1>
-                <p className="text-sm text-gray-500">{empresa?.tipo}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -162,22 +157,18 @@ const DashboardNew = () => {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-medium text-gray-500">Nome</p>
-                <p className="text-lg">{empresa?.nome_negocio}</p>
+                <p className="text-lg">{empresa?.name}</p>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Tipo</p>
-                <p className="text-lg">{empresa?.tipo}</p>
-              </div>
-              {empresa?.telefone && (
+              {empresa?.phone && (
                 <div>
                   <p className="text-sm font-medium text-gray-500">Telefone</p>
-                  <p className="text-lg">{empresa.telefone}</p>
+                  <p className="text-lg">{empresa.phone}</p>
                 </div>
               )}
-              {empresa?.endereco && (
+              {empresa?.address && (
                 <div>
                   <p className="text-sm font-medium text-gray-500">Endereço</p>
-                  <p className="text-lg">{empresa.endereco}</p>
+                  <p className="text-lg">{empresa.address}</p>
                 </div>
               )}
             </div>
@@ -249,11 +240,10 @@ const DashboardNew = () => {
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <h3 className="font-semibold">{profissional.nome}</h3>
-                          <p className="text-sm text-gray-500">{profissional.especialidade}</p>
+                          <h3 className="font-semibold">{profissional.name}</h3>
                         </div>
-                        <Badge variant={profissional.ativo ? "default" : "secondary"}>
-                          {profissional.ativo ? "Ativo" : "Inativo"}
+                        <Badge variant="default">
+                          Ativo
                         </Badge>
                       </div>
                       <div className="flex space-x-2">
@@ -294,16 +284,7 @@ const DashboardNew = () => {
                     id="edit-nome"
                     name="nome"
                     required
-                    defaultValue={editingProfissional.nome}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-especialidade">Especialidade *</Label>
-                  <Input
-                    id="edit-especialidade"
-                    name="especialidade"
-                    required
-                    defaultValue={editingProfissional.especialidade}
+                    defaultValue={editingProfissional.name}
                   />
                 </div>
                 <Button type="submit">Atualizar</Button>

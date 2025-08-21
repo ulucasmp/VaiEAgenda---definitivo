@@ -67,11 +67,10 @@ const ServicesTab = ({ services = [] }: ServicesTabProps) => {
     if (!empresa?.id) return;
 
     const servicoData = {
-      empresa_id: empresa.id,
-      nome: serviceData.name,
-      preco: serviceData.price,
-      duracao_em_minutos: serviceData.duration,
-      ativo: serviceData.active
+      company_id: empresa.id,
+      name: serviceData.name,
+      price: serviceData.price,
+      duration_minutes: serviceData.duration
     };
 
     if (serviceData.id) {
@@ -145,16 +144,14 @@ const ServicesTab = ({ services = [] }: ServicesTabProps) => {
             <TableBody>
               {servicos.map((servico) => (
                 <TableRow key={servico.id}>
-                  <TableCell className="font-medium">{servico.nome}</TableCell>
-                  <TableCell>R$ {Number(servico.preco).toFixed(2)}</TableCell>
-                  <TableCell>{servico.duracao_em_minutos} min</TableCell>
+                  <TableCell className="font-medium">{servico.name}</TableCell>
+                  <TableCell>R$ {Number(servico.price).toFixed(2)}</TableCell>
+                  <TableCell>{servico.duration_minutes} min</TableCell>
                   <TableCell>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      servico.ativo 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-800'
+                      'bg-green-100 text-green-800'
                     }`}>
-                      {servico.ativo ? 'Ativo' : 'Inativo'}
+                      Ativo
                     </span>
                   </TableCell>
                   <TableCell>
@@ -181,7 +178,7 @@ const ServicesTab = ({ services = [] }: ServicesTabProps) => {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Excluir Serviço</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Tem certeza que deseja excluir o serviço "{servico.nome}"? 
+                              Tem certeza que deseja excluir o serviço "{servico.name}"? 
                               Esta ação não pode ser desfeita.
                             </AlertDialogDescription>
                           </AlertDialogHeader>

@@ -85,22 +85,18 @@ const CompanyTab = () => {
   useEffect(() => {
     if (empresa) {
       setFormData({
-        name: empresa.nome_negocio || '',
-        address: empresa.endereco || '',
-        phone: empresa.telefone || '',
+        name: empresa.name || '',
+        address: empresa.address || '',
+        phone: empresa.phone || '',
       });
       
       // Carregar horários de funcionamento salvos ou usar padrão
-      if (empresa.horarios_funcionamento) {
-        const migratedHours = migrateOldFormat(empresa.horarios_funcionamento);
-        setWorkingHours(migratedHours);
-      }
+      // Note: working hours functionality needs to be implemented in the companies table
     }
   }, [empresa]);
 
   // Use o link_agendamento salvo no banco, com fallback para o slug
   const generateBookingLink = (): string => {
-    if (empresa?.link_agendamento) return empresa.link_agendamento;
     if (!empresa?.slug) return '';
     const currentDomain = window.location.origin;
     return `${currentDomain}/agendamento/${empresa.slug}`;
@@ -227,12 +223,11 @@ const CompanyTab = () => {
     try {
       // IMPORTANTE: Não atualizar o slug - ele permanece fixo após a criação
       const { error } = await supabase
-        .from('empresas')
+        .from('companies')
         .update({
-          nome_negocio: formData.name,
-          endereco: formData.address,
-          telefone: formData.phone,
-          horarios_funcionamento: workingHours,
+          name: formData.name,
+          address: formData.address,
+          phone: formData.phone,
           // slug NÃO é atualizado - permanece fixo para sempre
         })
         .eq('id', empresa.id);

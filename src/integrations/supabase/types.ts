@@ -14,217 +14,202 @@ export type Database = {
   }
   public: {
     Tables: {
-      agendamentos: {
+      appointments: {
         Row: {
-          cliente_email: string | null
-          cliente_nome: string
-          cliente_telefone: string
+          client_email: string | null
+          client_name: string
+          client_phone: string
           created_at: string
-          data_agendamento: string
-          empresa_id: string | null
-          horario: string
-          id: string
-          link_agendamento: string
-          profissional_id: string | null
-          servico_id: string | null
+          scheduled_at: string
+          company_id: string | null
+          professional_id: string | null
+          service_id: string | null
           status: string | null
-          status_confirmacao: string | null
+          id: string
         }
         Insert: {
-          cliente_email?: string | null
-          cliente_nome: string
-          cliente_telefone: string
+          client_email?: string | null
+          client_name: string
+          client_phone: string
           created_at?: string
-          data_agendamento: string
-          empresa_id?: string | null
-          horario: string
-          id?: string
-          link_agendamento: string
-          profissional_id?: string | null
-          servico_id?: string | null
+          scheduled_at: string
+          company_id?: string | null
+          professional_id?: string | null
+          service_id?: string | null
           status?: string | null
-          status_confirmacao?: string | null
+          id?: string
         }
         Update: {
-          cliente_email?: string | null
-          cliente_nome?: string
-          cliente_telefone?: string
+          client_email?: string | null
+          client_name?: string
+          client_phone?: string
           created_at?: string
-          data_agendamento?: string
-          empresa_id?: string | null
-          horario?: string
-          id?: string
-          link_agendamento?: string
-          profissional_id?: string | null
-          servico_id?: string | null
+          scheduled_at?: string
+          company_id?: string | null
+          professional_id?: string | null
+          service_id?: string | null
           status?: string | null
-          status_confirmacao?: string | null
+          id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "agendamentos_empresa_id_fkey"
-            columns: ["empresa_id"]
+            foreignKeyName: "appointments_company_id_fkey"
+            columns: ["company_id"]
             isOneToOne: false
-            referencedRelation: "empresas"
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "agendamentos_profissional_id_fkey"
-            columns: ["profissional_id"]
+            foreignKeyName: "appointments_professional_id_fkey"
+            columns: ["professional_id"]
             isOneToOne: false
-            referencedRelation: "profissionais"
+            referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "agendamentos_servico_id_fkey"
-            columns: ["servico_id"]
+            foreignKeyName: "appointments_service_id_fkey"
+            columns: ["service_id"]
             isOneToOne: false
-            referencedRelation: "servicos"
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]
       }
       bloqueios: {
         Row: {
-          criado_em: string
-          data: string
-          descricao: string | null
-          empresa_id: string
-          hora_fim: string
-          hora_inicio: string
+          created_at: string
+          start_time: string
+          end_time: string
+          motivo: string | null
+          company_id: string | null
+          professional_id: string | null
           id: string
         }
         Insert: {
-          criado_em?: string
-          data: string
-          descricao?: string | null
-          empresa_id: string
-          hora_fim: string
-          hora_inicio: string
+          created_at?: string
+          start_time: string
+          end_time: string
+          motivo?: string | null
+          company_id?: string | null
+          professional_id?: string | null
           id?: string
         }
         Update: {
-          criado_em?: string
-          data?: string
-          descricao?: string | null
-          empresa_id?: string
-          hora_fim?: string
-          hora_inicio?: string
+          created_at?: string
+          start_time?: string
+          end_time?: string
+          motivo?: string | null
+          company_id?: string | null
+          professional_id?: string | null
           id?: string
         }
         Relationships: []
       }
-      empresas: {
+      companies: {
         Row: {
           created_at: string
-          endereco: string | null
-          horarios_funcionamento: Json | null
-          id: string
-          link_agendamento: string | null
-          nome_negocio: string
-          owner_id: string
+          updated_at: string | null
+          address: string | null
+          name: string
+          email: string | null
+          phone: string | null
           slug: string | null
-          telefone: string | null
-          tipo: string
+          logo_url: string | null
+          id: string
+          plan_id: string | null
         }
         Insert: {
           created_at?: string
-          endereco?: string | null
-          horarios_funcionamento?: Json | null
-          id?: string
-          link_agendamento?: string | null
-          nome_negocio: string
-          owner_id: string
+          updated_at?: string | null
+          address?: string | null
+          name: string
+          email?: string | null
+          phone?: string | null
           slug?: string | null
-          telefone?: string | null
-          tipo: string
+          logo_url?: string | null
+          id?: string
+          plan_id?: string | null
         }
         Update: {
           created_at?: string
-          endereco?: string | null
-          horarios_funcionamento?: Json | null
-          id?: string
-          link_agendamento?: string | null
-          nome_negocio?: string
-          owner_id?: string
+          updated_at?: string | null
+          address?: string | null
+          name?: string
+          email?: string | null
+          phone?: string | null
           slug?: string | null
-          telefone?: string | null
-          tipo?: string
+          logo_url?: string | null
+          id?: string
+          plan_id?: string | null
         }
         Relationships: []
       }
-      profissionais: {
+      professionals: {
         Row: {
-          ativo: boolean
-          created_at: string
-          empresa_id: string
-          especialidade: string
-          horarios_disponiveis: Json | null
           id: string
-          nome: string
+          company_id: string | null
+          name: string
+          photo_url: string | null
+          created_at: string
         }
         Insert: {
-          ativo?: boolean
-          created_at?: string
-          empresa_id: string
-          especialidade: string
-          horarios_disponiveis?: Json | null
           id?: string
-          nome: string
+          company_id?: string | null
+          name: string
+          photo_url?: string | null
+          created_at?: string
         }
         Update: {
-          ativo?: boolean
-          created_at?: string
-          empresa_id?: string
-          especialidade?: string
-          horarios_disponiveis?: Json | null
           id?: string
-          nome?: string
+          company_id?: string | null
+          name?: string
+          photo_url?: string | null
+          created_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "profissionais_empresa_id_fkey"
-            columns: ["empresa_id"]
+            foreignKeyName: "professionals_company_id_fkey"
+            columns: ["company_id"]
             isOneToOne: false
-            referencedRelation: "empresas"
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
       }
-      servicos: {
+      services: {
         Row: {
-          ativo: boolean | null
-          created_at: string
-          duracao_em_minutos: number
-          empresa_id: string | null
           id: string
-          nome: string
-          preco: number
+          company_id: string | null
+          name: string
+          price: number | null
+          duration_minutes: number | null
+          description: string | null
+          created_at: string
         }
         Insert: {
-          ativo?: boolean | null
-          created_at?: string
-          duracao_em_minutos: number
-          empresa_id?: string | null
           id?: string
-          nome: string
-          preco: number
+          company_id?: string | null
+          name: string
+          price?: number | null
+          duration_minutes?: number | null
+          description?: string | null
+          created_at?: string
         }
         Update: {
-          ativo?: boolean | null
-          created_at?: string
-          duracao_em_minutos?: number
-          empresa_id?: string | null
           id?: string
-          nome?: string
-          preco?: number
+          company_id?: string | null
+          name?: string
+          price?: number | null
+          duration_minutes?: number | null
+          description?: string | null
+          created_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "servicos_empresa_id_fkey"
-            columns: ["empresa_id"]
+            foreignKeyName: "services_company_id_fkey"
+            columns: ["company_id"]
             isOneToOne: false
-            referencedRelation: "empresas"
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]

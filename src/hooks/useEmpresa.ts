@@ -5,23 +5,17 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface Empresa {
   id: string;
-  nome_negocio: string;
-  tipo: string;
-  telefone: string | null;
-  endereco: string | null;
+  name: string;
+  phone: string | null;
+  address: string | null;
   slug: string | null;
-  link_agendamento: string | null;
-  horarios_funcionamento?: any;
   created_at: string;
 }
 
 interface Profissional {
   id: string;
-  empresa_id: string;
-  nome: string;
-  especialidade: string;
-  horarios_disponiveis: any;
-  ativo: boolean;
+  company_id: string;
+  name: string;
   created_at: string;
 }
 
@@ -35,9 +29,9 @@ export const useEmpresa = () => {
     if (!user) return;
 
     const { data, error } = await supabase
-      .from('empresas')
+      .from('companies')
       .select('*')
-      .eq('owner_id', user.id)
+      .eq('id', user.id)
       .single();
 
     if (data && !error) {
@@ -49,9 +43,9 @@ export const useEmpresa = () => {
 
   const fetchProfissionais = async (empresaId: string) => {
     const { data, error } = await supabase
-      .from('profissionais')
+      .from('professionals')
       .select('*')
-      .eq('empresa_id', empresaId)
+      .eq('company_id', empresaId)
       .order('created_at', { ascending: true });
 
     if (data && !error) {
@@ -61,7 +55,7 @@ export const useEmpresa = () => {
 
   const addProfissional = async (profissionalData: Omit<Profissional, 'id' | 'created_at'>) => {
     const { data, error } = await supabase
-      .from('profissionais')
+      .from('professionals')
       .insert([profissionalData])
       .select()
       .single();
@@ -76,7 +70,7 @@ export const useEmpresa = () => {
 
   const updateProfissional = async (id: string, updates: Partial<Profissional>) => {
     const { data, error } = await supabase
-      .from('profissionais')
+      .from('professionals')
       .update(updates)
       .eq('id', id)
       .select()
@@ -94,7 +88,7 @@ export const useEmpresa = () => {
 
   const deleteProfissional = async (id: string) => {
     const { error } = await supabase
-      .from('profissionais')
+      .from('professionals')
       .delete()
       .eq('id', id);
 

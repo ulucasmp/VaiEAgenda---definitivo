@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,14 +8,13 @@ import { User, Clock, CheckCircle } from 'lucide-react';
 
 interface Appointment {
   id: string;
-  data_agendamento: string;
-  horario: string;
-  cliente_nome: string;
-  servico_nome?: string;
-  profissional_nome?: string;
+  scheduled_at: string;
+  client_name: string;
+  service_name?: string;
+  professional_name?: string;
   status: string;
-  servico_preco?: number;
-  servico_duracao?: number;
+  service_price?: number;
+  service_duration?: number;
 }
 
 interface AppointmentsListProps {
@@ -36,20 +34,18 @@ const AppointmentsList = ({ empresaId }: AppointmentsListProps) => {
 
       try {
         const { data, error } = await supabase
-          .from('agendamentos')
+          .from('appointments')
           .select(`
             id,
-            data_agendamento,
-            horario,
-            cliente_nome,
+            scheduled_at,
+            client_name,
             status,
-            servicos:servico_id(nome, preco, duracao_em_minutos),
-            profissionais:profissional_id(nome)
+            services:service_id(name, price, duration_minutes),
+            professionals:professional_id(name)
           `)
-          .eq('empresa_id', empresaId)
-          .gte('data_agendamento', new Date().toISOString().split('T')[0])
-          .order('data_agendamento', { ascending: true })
-          .order('horario', { ascending: true })
+          .eq('company_id', empresaId)
+          .gte('scheduled_at', new Date().toISOString().split('T')[0])
+          .order('scheduled_at', { ascending: true })
           .limit(10);
 
         if (error) {
@@ -57,14 +53,13 @@ const AppointmentsList = ({ empresaId }: AppointmentsListProps) => {
         } else {
           const formattedAppointments = data?.map(appointment => ({
             id: appointment.id,
-            data_agendamento: appointment.data_agendamento,
-            horario: appointment.horario,
-            cliente_nome: appointment.cliente_nome,
-            servico_nome: appointment.servicos?.nome || 'Serviço não informado',
-            profissional_nome: appointment.profissionais?.nome || 'Profissional não informado',
+            scheduled_at: appointment.scheduled_at,
+            client_name: appointment.client_name,
+            service_name: appointment.services?.name || 'Serviço não informado',
+            professional_name: appointment.professionals?.name || 'Profissional não informado',
             status: appointment.status || 'pendente',
-            servico_preco: appointment.servicos?.preco || 0,
-            servico_duracao: appointment.servicos?.duracao_em_minutos || 0
+            service_price: appointment.services?.price || 0,
+            service_duration: appointment.services?.duration_minutes || 0
           })) || [];
           
           setAppointments(formattedAppointments);
@@ -100,10 +95,11 @@ const AppointmentsList = ({ empresaId }: AppointmentsListProps) => {
 
   const formatAppointmentInfo = (appointment: Appointment) => {
     try {
-      const date = new Date(appointment.data_agendamento + 'T00:00:00');
+      const appointmentDate = new Date(appointment.scheduled_at);
+      const date = new Date(appointmentDate.toDateString());
       const dayOfWeek = format(date, 'eee', { locale: ptBR }).substring(0, 3);
       const formattedDate = format(date, 'dd/MM/yyyy', { locale: ptBR });
-      const time = appointment.horario.substring(0, 5); // Remove segundos se houver
+      const time = format(appointmentDate, 'HH:mm');
       
       return {
         dayOfWeek: dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1),
@@ -172,10 +168,10 @@ const AppointmentsList = ({ empresaId }: AppointmentsListProps) => {
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-gray-900 text-base truncate">
-                        {appointment.cliente_nome}
+                        {appointment.client_name}
                       </h3>
                       <p className="text-gray-700 text-sm font-medium truncate">
-                        {appointment.servico_nome}
+                        {appointment.service_name}
                       </p>
                       <p className="text-gray-500 text-xs mt-1">
                         {fullDateString}
@@ -185,9 +181,9 @@ const AppointmentsList = ({ empresaId }: AppointmentsListProps) => {
                       <div className="text-green-600 font-bold text-lg">
                         {time}
                       </div>
-                      {appointment.servico_preco > 0 && (
+                      {appointment.service_price > 0 && (
                         <div className="text-gray-700 font-semibold text-sm">
-                          R$ {appointment.servico_preco.toFixed(2).replace('.', ',')}
+                          R$ {appointment.service_price.toFixed(2).replace('.', ',')}
                         </div>
                       )}
                     </div>
@@ -197,12 +193,12 @@ const AppointmentsList = ({ empresaId }: AppointmentsListProps) => {
                     <div className="flex items-center gap-3 text-gray-600 text-xs min-w-0">
                       <div className="flex items-center gap-1 truncate">
                         <User className="w-3 h-3 flex-shrink-0" />
-                        <span className="truncate">{appointment.profissional_nome}</span>
+                        <span className="truncate">{appointment.professional_name}</span>
                       </div>
-                      {appointment.servico_duracao > 0 && (
+                      {appointment.service_duration > 0 && (
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <Clock className="w-3 h-3" />
-                          <span>{appointment.servico_duracao}min</span>
+                          <span>{appointment.service_duration}min</span>
                         </div>
                       )}
                     </div>

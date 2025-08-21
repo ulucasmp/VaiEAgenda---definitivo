@@ -38,9 +38,9 @@ const EmpresaSetup = () => {
       if (!user) return;
       
       const { data, error } = await supabase
-        .from('empresas')
+        .from('companies')
         .select('id')
-        .eq('owner_id', user.id)
+        .eq('id', user.id)
         .single();
 
       if (data && !error) {
@@ -59,10 +59,9 @@ const EmpresaSetup = () => {
 
   const validateForm = (formData: FormData) => {
     const data = {
-      nome_negocio: formData.get('nome_negocio') as string,
-      tipo: formData.get('tipo') as string,
-      telefone: formData.get('telefone') as string || '',
-      endereco: formData.get('endereco') as string || ''
+      name: formData.get('name') as string,
+      phone: formData.get('phone') as string || '',
+      address: formData.get('address') as string || ''
     };
 
     try {
@@ -91,17 +90,15 @@ const EmpresaSetup = () => {
     const formData = new FormData(e.currentTarget);
     
     // Sanitize inputs
-    const nome_negocio = sanitizeName(formData.get('nome_negocio') as string);
-    const tipo = sanitizeInput(formData.get('tipo') as string);
-    const telefone = sanitizeInput(formData.get('telefone') as string);
-    const endereco = sanitizeInput(formData.get('endereco') as string);
+    const name = sanitizeName(formData.get('name') as string);
+    const phone = sanitizeInput(formData.get('phone') as string);
+    const address = sanitizeInput(formData.get('address') as string);
 
     // Create new FormData with sanitized values
     const sanitizedFormData = new FormData();
-    sanitizedFormData.set('nome_negocio', nome_negocio);
-    sanitizedFormData.set('tipo', tipo);
-    sanitizedFormData.set('telefone', telefone);
-    sanitizedFormData.set('endereco', endereco);
+    sanitizedFormData.set('name', name);
+    sanitizedFormData.set('phone', phone);
+    sanitizedFormData.set('address', address);
 
     const validation = validateForm(sanitizedFormData);
     
@@ -111,18 +108,17 @@ const EmpresaSetup = () => {
     }
 
     const empresaData = {
-      owner_id: user.id,
-      nome_negocio: validation.data.nome_negocio,
-      tipo: validation.data.tipo,
-      telefone: validation.data.telefone || null,
-      endereco: validation.data.endereco,
+      id: user.id,
+      name: validation.data.name,
+      phone: validation.data.phone || null,
+      address: validation.data.address,
       // slug e link_agendamento serão gerados automaticamente pelos triggers do banco
     };
 
     console.log('Dados da empresa a serem inseridos:', empresaData);
 
     const { data, error } = await supabase
-      .from('empresas')
+      .from('companies')
       .insert([empresaData])
       .select()
       .single();
@@ -137,7 +133,7 @@ const EmpresaSetup = () => {
     } else {
       toast({
         title: "Empresa cadastrada com sucesso!",
-        description: `Sua URL pública: ${data.link_agendamento || `/agendamento/${data.slug}`}`,
+        description: `Sua URL pública: /agendamento/${data.slug}`,
       });
       navigate('/dashboard');
     }
@@ -176,19 +172,19 @@ const EmpresaSetup = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="nome_negocio">Nome do Negócio *</Label>
+                <Label htmlFor="name">Nome do Negócio *</Label>
                 <Input
-                  id="nome_negocio"
-                  name="nome_negocio"
+                  id="name"
+                  name="name"
                   type="text"
                   required
                   placeholder="Ex: Salão Beleza Total"
                   disabled={isLoading}
                   maxLength={150}
-                  className={errors.nome_negocio ? 'border-red-500' : ''}
+                  className={errors.name ? 'border-red-500' : ''}
                 />
-                {errors.nome_negocio && (
-                  <p className="text-red-500 text-sm mt-1">{errors.nome_negocio}</p>
+                {errors.name && (
+                  <p className="text-red-500 text-sm mt-1">{errors.name}</p>
                 )}
                 <p className="text-xs text-gray-500 mt-1">
                   Será usado para gerar sua URL pública automaticamente
@@ -196,55 +192,35 @@ const EmpresaSetup = () => {
               </div>
 
               <div>
-                <Label htmlFor="tipo">Tipo de Negócio *</Label>
-                <Select name="tipo" required disabled={isLoading}>
-                  <SelectTrigger className={errors.tipo ? 'border-red-500' : ''}>
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="salao_beleza">Salão de Beleza</SelectItem>
-                    <SelectItem value="barbearia">Barbearia</SelectItem>
-                    <SelectItem value="estetica">Clínica de Estética</SelectItem>
-                    <SelectItem value="spa">Spa</SelectItem>
-                    <SelectItem value="manicure">Manicure/Pedicure</SelectItem>
-                    <SelectItem value="outros">Outros</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.tipo && (
-                  <p className="text-red-500 text-sm mt-1">{errors.tipo}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="telefone">Telefone</Label>
+                <Label htmlFor="phone">Telefone</Label>
                 <Input
-                  id="telefone"
-                  name="telefone"
+                  id="phone"
+                  name="phone"
                   type="tel"
                   placeholder="(11) 99999-9999"
                   disabled={isLoading}
                   maxLength={20}
-                  className={errors.telefone ? 'border-red-500' : ''}
+                  className={errors.phone ? 'border-red-500' : ''}
                 />
-                {errors.telefone && (
-                  <p className="text-red-500 text-sm mt-1">{errors.telefone}</p>
+                {errors.phone && (
+                  <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
                 )}
               </div>
 
               <div>
-                <Label htmlFor="endereco">Endereço *</Label>
+                <Label htmlFor="address">Endereço *</Label>
                 <Input
-                  id="endereco"
-                  name="endereco"
+                  id="address"
+                  name="address"
                   type="text"
                   required
                   placeholder="Rua, número, bairro, cidade"
                   disabled={isLoading}
                   maxLength={255}
-                  className={errors.endereco ? 'border-red-500' : ''}
+                  className={errors.address ? 'border-red-500' : ''}
                 />
-                {errors.endereco && (
-                  <p className="text-red-500 text-sm mt-1">{errors.endereco}</p>
+                {errors.address && (
+                  <p className="text-red-500 text-sm mt-1">{errors.address}</p>
                 )}
               </div>
 

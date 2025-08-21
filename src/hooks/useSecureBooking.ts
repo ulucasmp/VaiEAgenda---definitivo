@@ -65,37 +65,23 @@ export const useSecureBooking = () => {
 
       // Buscar horários de funcionamento da empresa
       const { data: empresaData } = await supabase
-        .from('empresas')
-        .select('horarios_funcionamento')
+        .from('companies')
+        .select('*')
         .eq('id', bookingData.empresaId)
         .single();
 
-      if (empresaData?.horarios_funcionamento) {
-        const isValidTime = isTimeWithinBusinessHours(
-          empresaData.horarios_funcionamento as any,
-          validatedData.selectedDate,
-          validatedData.selectedTime
-        );
-
-        if (!isValidTime) {
-          toast({
-            title: "Horário inválido",
-            description: "Este horário não está disponível para agendamento.",
-            variant: "destructive",
-          });
-          return { success: false };
-        }
-      }
+      // For now, skip business hours validation since it's not implemented in the companies table
 
       // Verificar se o horário está bloqueado
       const selectedDateStr = validatedData.selectedDate.toISOString().split('T')[0];
-      const selectedTimeStr = validatedData.selectedTime + ':00';
+      const selectedDateTime = new Date(`${selectedDateStr}T${validatedData.selectedTime}:00`);
 
       const { data: bloqueios, error: bloqueioError } = await supabase
         .from('bloqueios')
-        .select('hora_inicio, hora_fim')
-        .eq('empresa_id', bookingData.empresaId)
-        .eq('data', selectedDateStr);
+        .select('start_time, end_time')
+        .eq('company_id', bookingData.empresaId)
+        .gte('start_time', selectedDateStr)
+        .lt('start_time', selectedDateStr + 'T23:59:59');
 
       if (bloqueioError) {
         throw new Error('Erro ao verificar bloqueios de horário');
@@ -103,7 +89,9 @@ export const useSecureBooking = () => {
 
       // Verificar se o horário está em algum bloqueio
       const isBlocked = bloqueios?.some(bloqueio => {
-        return selectedTimeStr >= bloqueio.hora_inicio && selectedTimeStr < bloqueio.hora_fim;
+        const startTime = new Date(bloqueio.start_time);
+        const endTime = new Date(bloqueio.end_time);
+        return selectedDateTime >= startTime && selectedDateTime < endTime;
       });
 
       if (isBlocked) {
@@ -120,19 +108,17 @@ export const useSecureBooking = () => {
       // Se não há profissional, verificar conflitos por serviço/empresa
       const conflictQuery = validatedData.selectedProfessional 
         ? supabase
-            .from('agendamentos')
+            .from('appointments')
             .select('id')
-            .eq('profissional_id', validatedData.selectedProfessional)
-            .eq('data_agendamento', selectedDateStr)
-            .eq('horario', selectedTimeStr)
+            .eq('professional_id', validatedData.selectedProfessional)
+            .eq('scheduled_at', selectedDateTime.toISOString())
         : supabase
-            .from('agendamentos')
+            .from('appointments')
             .select('id')
-            .eq('empresa_id', bookingData.empresaId)
-            .eq('servico_id', validatedData.selectedService)
-            .eq('data_agendamento', selectedDateStr)
-            .eq('horario', selectedTimeStr)
-            .is('profissional_id', null);
+            .eq('company_id', bookingData.empresaId)
+            .eq('service_id', validatedData.selectedService)
+            .eq('scheduled_at', selectedDateTime.toISOString())
+            .is('professional_id', null);
 
       const { data: existingBookings, error: conflictError } = await conflictQuery;
 
@@ -151,20 +137,18 @@ export const useSecureBooking = () => {
 
       // Create the booking
       const agendamentoData = {
-        empresa_id: bookingData.empresaId,
-        profissional_id: validatedData.selectedProfessional || null,
-        servico_id: validatedData.selectedService,
-        cliente_nome: validatedData.clientName,
-        cliente_telefone: validatedData.clientPhone,
-        cliente_email: validatedData.clientEmail || null,
-        data_agendamento: validatedData.selectedDate.toISOString().split('T')[0],
-        horario: validatedData.selectedTime + ':00',
-        status: 'agendado - pendente de confirmação',
-        link_agendamento: '' // O trigger gerará automaticamente
+        company_id: bookingData.empresaId,
+        professional_id: validatedData.selectedProfessional || null,
+        service_id: validatedData.selectedService,
+        client_name: validatedData.clientName,
+        client_phone: validatedData.clientPhone,
+        client_email: validatedData.clientEmail || null,
+        scheduled_at: selectedDateTime.toISOString(),
+        status: 'scheduled'
       };
 
       const { error } = await supabase
-        .from('agendamentos')
+        .from('appointments')
         .insert(agendamentoData);
 
       if (error) {

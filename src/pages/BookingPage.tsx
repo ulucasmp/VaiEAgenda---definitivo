@@ -9,12 +9,10 @@ import BookingForm from '@/components/booking/BookingForm';
 
 interface Empresa {
   id: string;
-  nome_negocio: string;
-  tipo: string;
-  telefone: string | null;
-  endereco: string | null;
+  name: string;
+  phone: string | null;
+  address: string | null;
   slug: string;
-  horarios_funcionamento?: any;
 }
 
 interface Professional {
@@ -58,8 +56,8 @@ const BookingPage = () => {
       try {
         // Buscar empresa pelo slug
         const { data: empresaData, error: empresaError } = await supabase
-          .from('empresas')
-          .select('id, nome_negocio, tipo, telefone, endereco, slug, horarios_funcionamento')
+          .from('companies')
+          .select('id, name, phone, address, slug')
           .eq('slug', slug)
           .maybeSingle();
 
@@ -89,16 +87,15 @@ const BookingPage = () => {
 
         // Buscar profissionais da empresa
         const { data: profissionaisData, error: profissionaisError } = await supabase
-          .from('profissionais')
-          .select('id, nome, especialidade')
-          .eq('empresa_id', empresaData.id)
-          .eq('ativo', true);
+          .from('professionals')
+          .select('id, name')
+          .eq('company_id', empresaData.id);
 
         if (profissionaisData && !profissionaisError) {
           setProfessionals(profissionaisData.map(prof => ({
             id: prof.id,
-            name: prof.nome,
-            specialty: prof.especialidade
+            name: prof.name,
+            specialty: 'Professional'
           })));
         } else if (profissionaisError) {
           console.error('BookingPage: Erro ao buscar profissionais:', profissionaisError);
@@ -106,17 +103,16 @@ const BookingPage = () => {
 
         // Buscar serviços da empresa
         const { data: servicosData, error: servicosError } = await supabase
-          .from('servicos')
-          .select('id, nome, preco, duracao_em_minutos')
-          .eq('empresa_id', empresaData.id)
-          .eq('ativo', true);
+          .from('services')
+          .select('id, name, price, duration_minutes')
+          .eq('company_id', empresaData.id);
 
         if (servicosData && !servicosError) {
           setServices(servicosData.map(servico => ({
             id: servico.id,
-            name: servico.nome,
-            price: Number(servico.preco),
-            duration: servico.duracao_em_minutos
+            name: servico.name,
+            price: Number(servico.price),
+            duration: servico.duration_minutes
           })));
         } else if (servicosError) {
           console.error('BookingPage: Erro ao buscar serviços:', servicosError);
@@ -140,12 +136,12 @@ const BookingPage = () => {
 
   // Horários disponíveis baseados na configuração da empresa e bloqueios
   const getAvailableTimes = async (selectedDate?: Date): Promise<string[]> => {
-    if (!empresa?.horarios_funcionamento || !selectedDate) {
+    if (!empresa || !selectedDate) {
       return [];
     }
     
-    const module = await import('@/utils/timeUtils');
-    const allTimes = module.generateAvailableTimes(empresa.horarios_funcionamento, selectedDate);
+    // Default business hours for now
+    const allTimes = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'];
     
     // Buscar bloqueios e agendamentos em uma única consulta otimizada
     const selectedDateStr = selectedDate.toISOString().split('T')[0];
@@ -154,15 +150,17 @@ const BookingPage = () => {
       const [bloqueiosResult, agendamentosResult] = await Promise.all([
         supabase
           .from('bloqueios')
-          .select('hora_inicio, hora_fim')
-          .eq('empresa_id', empresa.id)
-          .eq('data', selectedDateStr),
+          .select('start_time, end_time')
+          .eq('company_id', empresa.id)
+          .gte('start_time', selectedDateStr)
+          .lt('start_time', selectedDateStr + 'T23:59:59'),
         supabase
-          .from('agendamentos')
-          .select('horario')
-          .eq('empresa_id', empresa.id)
-          .eq('data_agendamento', selectedDateStr)
-          .eq('status', 'agendado - pendente de confirmação')
+          .from('appointments')
+          .select('scheduled_at')
+          .eq('company_id', empresa.id)
+          .gte('scheduled_at', selectedDateStr)
+          .lt('scheduled_at', selectedDateStr + 'T23:59:59')
+          .eq('status', 'scheduled')
       ]);
 
       if (bloqueiosResult.error) {
@@ -178,15 +176,19 @@ const BookingPage = () => {
 
       // Filtrar horários que estão bloqueados ou ocupados
       const availableTimes = allTimes.filter(time => {
-        const timeWithSeconds = time + ':00';
         
         // Verificar se o horário está em algum bloqueio
         const isBlocked = bloqueios.some(bloqueio => {
-          return timeWithSeconds >= bloqueio.hora_inicio && timeWithSeconds < bloqueio.hora_fim;
+          const bloqueioStart = new Date(bloqueio.start_time).toTimeString().slice(0, 5);
+          const bloqueioEnd = new Date(bloqueio.end_time).toTimeString().slice(0, 5);
+          return time >= bloqueioStart && time < bloqueioEnd;
         });
         
         // Verificar se já tem agendamento
-        const isBooked = agendamentos.some(agendamento => agendamento.horario === timeWithSeconds);
+        const isBooked = agendamentos.some(agendamento => {
+          const appointmentTime = new Date(agendamento.scheduled_at).toTimeString().slice(0, 5);
+          return appointmentTime === time;
+        });
         
         return !isBlocked && !isBooked;
       });
@@ -217,13 +219,13 @@ const BookingPage = () => {
   }
 
   const companySettings = {
-    name: empresa.nome_negocio,
-    type: empresa.tipo,
-    phone: empresa.telefone || '',
-    address: empresa.endereco || '',
+    name: empresa.name,
+    type: 'business',
+    phone: empresa.phone || '',
+    address: empresa.address || '',
     logo: '',
     businessPhoto: null,
-    workingHours: empresa.horarios_funcionamento || {
+    workingHours: {
       segunda: { active: true, shifts: [{ start: '08:00', end: '12:00' }, { start: '14:00', end: '18:00' }] },
       terca: { active: true, shifts: [{ start: '08:00', end: '12:00' }, { start: '14:00', end: '18:00' }] },
       quarta: { active: true, shifts: [{ start: '08:00', end: '12:00' }, { start: '14:00', end: '18:00' }] },

@@ -52,10 +52,9 @@ export const bookingSchema = z.object({
 });
 
 export const empresaSetupSchema = z.object({
-  nome_negocio: businessNameSchema,
-  tipo: z.string().min(1, 'Tipo é obrigatório'),
-  telefone: phoneSchema.optional().or(z.literal('')),
-  endereco: addressSchema
+  name: businessNameSchema,
+  phone: phoneSchema.optional().or(z.literal('')),
+  address: addressSchema
 });
 
 // Sanitization functions

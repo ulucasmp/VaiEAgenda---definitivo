@@ -4,12 +4,12 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface Bloqueio {
   id: string;
-  empresa_id: string;
-  data: string;
-  hora_inicio: string;
-  hora_fim: string;
-  descricao?: string;
-  criado_em: string;
+  company_id: string | null;
+  professional_id: string | null;
+  start_time: string;
+  end_time: string;
+  motivo?: string;
+  created_at: string;
 }
 
 export const useBloqueios = (empresaId?: string) => {
@@ -24,21 +24,21 @@ export const useBloqueios = (empresaId?: string) => {
       let query = supabase
         .from('bloqueios')
         .select('*')
-        .order('data', { ascending: true })
-        .order('hora_inicio', { ascending: true });
+        .order('start_time', { ascending: true })
+        .order('end_time', { ascending: true });
 
       if (empresaId) {
-        query = query.eq('empresa_id', empresaId);
+        query = query.eq('company_id', empresaId);
       } else if (user) {
         // Buscar bloqueios da empresa do usuário logado
         const { data: empresaData } = await supabase
-          .from('empresas')
+          .from('companies')
           .select('id')
-          .eq('owner_id', user.id)
+          .eq('id', user.id)
           .single();
 
         if (empresaData) {
-          query = query.eq('empresa_id', empresaData.id);
+          query = query.eq('company_id', empresaData.id);
         }
       }
 
@@ -64,17 +64,17 @@ export const useBloqueios = (empresaId?: string) => {
   // Buscar bloqueios para uma data específica
   const getBloqueiosByDate = (date: Date): Bloqueio[] => {
     const dateString = date.toISOString().split('T')[0];
-    return bloqueios.filter(bloqueio => bloqueio.data === dateString);
+    return bloqueios.filter(bloqueio => bloqueio.start_time.split('T')[0] === dateString);
   };
 
   // Verificar se um horário está bloqueado
   const isTimeBlocked = (date: Date, startTime: string, endTime: string): boolean => {
     const dateString = date.toISOString().split('T')[0];
     return bloqueios.some(bloqueio => {
-      if (bloqueio.data !== dateString) return false;
+      if (bloqueio.start_time.split('T')[0] !== dateString) return false;
       
-      const bloqueioStart = bloqueio.hora_inicio;
-      const bloqueioEnd = bloqueio.hora_fim;
+      const bloqueioStart = bloqueio.start_time.split('T')[1] || bloqueio.start_time;
+      const bloqueioEnd = bloqueio.end_time.split('T')[1] || bloqueio.end_time;
       
       // Verifica se há sobreposição de horários
       return (startTime < bloqueioEnd && endTime > bloqueioStart);
@@ -82,7 +82,7 @@ export const useBloqueios = (empresaId?: string) => {
   };
 
   // Criar novo bloqueio
-  const createBloqueio = async (bloqueio: Omit<Bloqueio, 'id' | 'criado_em'>) => {
+  const createBloqueio = async (bloqueio: Omit<Bloqueio, 'id' | 'created_at'>) => {
     try {
       const { data, error } = await supabase
         .from('bloqueios')
